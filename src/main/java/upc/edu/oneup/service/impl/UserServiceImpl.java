@@ -80,4 +80,9 @@ public class UserServiceImpl implements UserService {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));
     }
+
+    @Override
+    public boolean isUsernameTaken(String username) {
+        return userRepository.findByUsername(username).isPresent();
+    }
 }
