@@ -14,4 +14,5 @@ public interface UserService {
     User getUserByUsernameAndPassword(String username, String password);
     List<Patient> getPatientsByUserId(int id);
     User getUserByUsername(String username);  // Añadir este método
+    boolean isUsernameTaken(String username); // New method
 }
