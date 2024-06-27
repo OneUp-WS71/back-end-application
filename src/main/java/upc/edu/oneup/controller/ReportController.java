@@ -2,7 +2,10 @@ package upc.edu.oneup.controller;
 
 import upc.edu.oneup.exception.ResourceNotFoundException;
 import upc.edu.oneup.exception.ValidationException;
+import upc.edu.oneup.model.Patient;
 import upc.edu.oneup.model.Report;
+import upc.edu.oneup.repository.PatientRepository;
+import upc.edu.oneup.service.PatientService;
 import upc.edu.oneup.service.ReportService;
 import upc.edu.oneup.service.UserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -17,14 +20,19 @@ import java.util.List;
 @Tag(name = "Reports", description = "the report API")
 @RestController
 @RequestMapping("/api/oneup/v1")
+//@CrossOrigin(origins = "*")
 public class ReportController {
     private final ReportService reportService;
+    private final PatientService patientService;
     private final UserService userService;
+    private final PatientRepository patientRepository;
 
     @Autowired
-    public ReportController(ReportService reportService, UserService userService) {
+    public ReportController(ReportService reportService, UserService userService, PatientRepository patientRepository,PatientService patientService) {
         this.reportService = reportService;
+        this.patientService=patientService;
         this.userService = userService;
+        this.patientRepository = patientRepository;
     }
 
     // Endpoint: /api/oneup/v1/reports
@@ -56,14 +64,18 @@ public class ReportController {
         return new ResponseEntity<>(reportService.getReportById(id), HttpStatus.OK);
     }
 
-    // Endpoint: /api/oneup/v1/report
+    // Endpoint: /api/oneup/v1/report/{patientId}
     // Method: POST
     // Crea el Report
     @Transactional
-    @PostMapping("/report")
-    public ResponseEntity<Report> createReport(@RequestBody Report report) {
+    @PostMapping("/report/{patientId}")
+    public ResponseEntity<Report> createReport(@RequestBody Report report, @PathVariable int patientId) {
+        Patient patient = patientRepository.findById(patientId)
+                .orElseThrow(() -> new ValidationException("Patient not found"));
+        report.setPatient(patient);
         validateReport(report);
-        notFoundUser(report.getPatient().getId());
+        notFoundPatient(report.getPatient().getId());
+        //  notFoundUser(report.getPatient().getId());
         return new ResponseEntity<>(reportService.saveReport(report), HttpStatus.CREATED);
     }
 
@@ -86,6 +98,12 @@ public class ReportController {
     private void notFoundUser(int id) {
         if (userService.getUserById(id) == null) {
             throw new ResourceNotFoundException("User with id: " + id + " not found");
+        }
+    }
+
+    private void notFoundPatient(int id) {
+        if (patientService.getPatientById(id) == null) {
+            throw new ResourceNotFoundException("Patient with id: " + id + " not found");
         }
     }
 
