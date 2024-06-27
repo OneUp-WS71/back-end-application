@@ -101,6 +101,9 @@ public class UserController {
         if (user.getEmail() != null && (user.getEmail().trim().isEmpty() || user.getEmail().length() > 50)) {
             throw new ValidationException("Email must not be empty and must not be more than 50 characters");
         }
+        if (userService.isUsernameTaken(user.getUsername())) {
+            throw new ValidationException("Username is already taken");
+        }
 
 
 
