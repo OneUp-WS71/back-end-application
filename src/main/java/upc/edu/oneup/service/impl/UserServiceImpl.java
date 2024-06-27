@@ -1,6 +1,7 @@
 package upc.edu.oneup.service.impl;
 
 import upc.edu.oneup.exception.ResourceNotFoundException;
+import upc.edu.oneup.model.Patient;
 import upc.edu.oneup.model.User;
 import upc.edu.oneup.repository.UserRepository;
 import upc.edu.oneup.service.UserService;
@@ -36,16 +37,20 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User updateUser(int id, User updatedUser) {
-        User existingUser = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+    public User updateUserByUsername(String username, User updatedUser) {
+        User existingUser = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));
 
-        existingUser.setUsername(updatedUser.getUsername());
-        existingUser.setPassword(updatedUser.getPassword());
-        existingUser.setName(updatedUser.getName());
-        existingUser.setLastname(updatedUser.getLastname());
-        existingUser.setEmail(updatedUser.getEmail());
-        existingUser.setPhone(updatedUser.getPhone());
+        if (updatedUser.getUsername() != null) {
+            existingUser.setUsername(updatedUser.getUsername());
+        }
+        if (updatedUser.getPassword() != null) {
+            existingUser.setPassword(updatedUser.getPassword());
+        }
+
+        if (updatedUser.getEmail() != null) {
+            existingUser.setEmail(updatedUser.getEmail());
+        }
 
         return userRepository.save(existingUser);
     }
@@ -65,6 +70,14 @@ public class UserServiceImpl implements UserService {
         return userRepository.findByUsernameAndPassword(username, password);
     }
 
+    @Override
+    public List<Patient> getPatientsByUserId(int id) {
+        return userRepository.findById(id).get().getPatients();
+    }
 
-
+    @Override
+    public User getUserByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));
+    }
 }
