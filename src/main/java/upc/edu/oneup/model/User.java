@@ -21,11 +21,9 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
+
     @Column(name = "username", nullable = false, length = 30)
     private String username;
-
-    @Column(name = "password", nullable = false, length = 30)
-    private String password;
 
     @Column(name = "name", nullable = false, length = 30)
     private String name;
@@ -33,26 +31,20 @@ public class User {
     @Column(name = "lastname", nullable = false, length = 30)
     private String lastname;
 
+    @Column(name = "phone", nullable = false, length = 30)
+    private String phone;
+
+    @Column(name = "password", nullable = false, length = 30)
+    private String password;
+
     @Column(name = "email", nullable = false, length = 50)
     private String email;
 
-    @Column(name = "phone", nullable = false, length = 9)
-    private String phone;
 
-    @Column(name = "type", nullable = false, length = 15)
-    private String type;
-
-    @Column(name = "gender", nullable = false, length = 15)
-    private String gender;
-
-
-
-    @JsonManagedReference
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Patient> patients;
 
-
-    @JsonManagedReference
+    @JsonIgnore
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Product> products;
 }
