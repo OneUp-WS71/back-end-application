@@ -1,7 +1,9 @@
 package upc.edu.oneup.controller;
 
 import upc.edu.oneup.exception.ValidationException;
+import upc.edu.oneup.model.Device;
 import upc.edu.oneup.model.Patient;
+import upc.edu.oneup.model.Report;
 import upc.edu.oneup.model.User;
 import upc.edu.oneup.repository.UserRepository;
 import upc.edu.oneup.service.PatientService;
@@ -17,6 +19,7 @@ import java.util.List;
 @Tag(name = "Patients", description = "the Patient API")
 @RestController
 @RequestMapping("/api/oneup/v1") //@RequestMapping("/api/oneup/v1")
+//@CrossOrigin(origins = "*")
 public class PatientController {
     private final PatientService patientService;
     private final UserService userService;
@@ -40,6 +43,31 @@ public class PatientController {
         }
     }
 
+
+    @GetMapping("/patients/{id}/device")
+    public ResponseEntity<Device> getDeviceByPatientId(@PathVariable int id) {
+        Device device = patientService.getDeviceByPatientId(id);
+        if (device != null) {
+            return new ResponseEntity<>(device, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @GetMapping("/patients/{id}/reports")
+    public ResponseEntity<List<Report>> getReportByPatientId(@PathVariable int id) {
+        List<Report> reports = patientService.getReportByPatientId(id);
+        if (reports != null && !reports.isEmpty()) {
+            return new ResponseEntity<>(reports, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+
+
+
+
     // Obtiene todos los Patients
     @GetMapping("/patients")
     public ResponseEntity<List<Patient>> getAllPatients() {
@@ -48,14 +76,22 @@ public class PatientController {
     }
 
     // Crea el Patient
-    @PostMapping("/patients")
-    public ResponseEntity<Patient> createPatient(@RequestBody Patient patient) {
-        User user = userRepository.findById(patient.getUser().getId())
-                                    .orElseThrow(() -> new ValidationException("User not found"));
+    @PostMapping("/patients/{userId}")
+    public ResponseEntity<?> createPatient(@RequestBody Patient patient, @PathVariable int userId) {
+        // Verifica si el usuario ya tiene un paciente asociado
+        if (patientService.userHasPatient(userId)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("El usuario ya tiene un paciente asociado.");
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ValidationException("User not found"));
+        patient.setDevice(null);
+        patient.setUser(user);
         Patient newPatient = patientService.savePatient(patient);
-        newPatient.setUser(user);
         return new ResponseEntity<>(newPatient, HttpStatus.CREATED);
     }
+
 
     //elimina el patient por ID
     @DeleteMapping("/patients/{id}")
@@ -63,4 +99,18 @@ public class PatientController {
         patientService.deletePatient(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
+
+    @PutMapping("/patients/{id}")
+    public ResponseEntity<Patient> updatePatient(@PathVariable int id, @RequestBody Patient updatedPatient) {
+        Patient existingPatient = patientService.getPatientById(id);
+        if (existingPatient != null) {
+            updatedPatient.setId(id); // Asegura que el ID del paciente sea el mismo que el recibido
+            Patient savedPatient = patientService.updatePatient(updatedPatient);
+            return new ResponseEntity<>(savedPatient, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
 }
